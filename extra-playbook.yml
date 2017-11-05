@@ -1,0 +1,67 @@
+---
+- hosts: all
+  become: true
+  vars:
+     download_url: http://download.oracle.com/otn-pub/java/jdk/8u151-b12/e758a0de34e24606bca991d704f6dcbf/jdk-8u151-linux-x64.tar.gz
+     download_url_jenkins: http://mirrors.jenkins.io/war/latest/jenkins.war
+     download_url_maven: http://www-eu.apache.org/dist/maven/maven-3/3.5.0/binaries/apache-maven-3.5.0-bin.tar.gz
+     download_folder: /opt
+     java_name: "{{download_folder}}/jdk1.8.0_151"
+     jenkins_name: "{{download_folder}}/jenkins.war"
+     maven: apache-maven-3.5.0-bin.tar.gz
+     maven_name: "{{download_folder}}/apache-maven-3.5.0"
+     maven_archive: "{{download_folder}}/apache-maven-3.5.0-bin.tar.gz"
+     java_archive: "{{download_folder}}/jdk-8u151-linux-x64.tar.gz"
+     jenkins_archive: "{{download_folder}}/{{download_url_jenkins}}"
+     maven_archive: "{{download_folder}}/{{download_url_maven}}"
+     java_package_name: jdk-8u151-linux-x64.tar
+     path: /usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/home/vagrant/.local/bin:/home/vagrant/bin
+  tasks:
+    - name: install apache2
+      yum: name=httpd update_cache=yes state=latest
+    - name: ensure apache is running (and enable it at boot)
+      service: name=httpd state=started enabled=yes
+    - name: install wget
+      yum: name=wget update_cache=yes state=latest
+    - name: Download Java
+      command: "wget --no-clobber -q -O {{java_archive}} --no-check-certificate --no-cookies --header 'Cookie: oraclelicense=accept-securebackup-cookie' {{download_url}} creates={{java_archive}}"
+    - name: Change java archive privileges
+      command: "chmod 775 {{java_archive}}"
+      sudo: yes
+    - name: extract java tar
+      command: tar -xvzf {{java_archive}}
+      sudo: yes
+    - name: Fix java ownership
+      file: state=directory path=/home/vagrant/jdk1.8.0_151 owner=root group=root recurse=yes
+    - name: move java to opt
+      shell: mv --force /home/vagrant/jdk1.8.0_151 {{java_name}}
+      become: true
+    - name: Make Java available for system
+      command: alternatives --install /usr/bin/java java {{java_name}}/bin/java 2
+      sudo: yes
+    - name: config JAVA
+      command: alternatives --auto java
+      sudo: yes
+    - name: Download Jenkins
+      command: wget --no-clobber --no-check-certificate {{download_url_jenkins}}
+      sudo: yes
+    - name: move jenkins to opt
+      shell: mv --force /home/vagrant/jenkins.war {{jenkins_name}}
+      become: true
+    - name: Change java archive privileges
+      command: "chmod 775 {{jenkins_name}}"
+      sudo: yes
+    - name: download maven
+      command: wget --no-clobber --no-cache {{download_url_maven}}
+    - name: Change maven archive privileges
+      command: "chmod 775 {{maven}}"
+      sudo: yes
+    - name: extract maven tar
+      command: tar xzf /home/vagrant/{{maven}}
+      sudo: yes
+    - name: move maven to opt
+      shell: mv --force /home/vagrant/apache-maven-3.5.0 {{maven_name}}
+      become: true
+    - name: deploy jenkins
+      command: java -jar /opt/jenkins.war --httpPort=8080
+      become: true
