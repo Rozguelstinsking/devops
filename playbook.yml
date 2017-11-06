@@ -91,35 +91,8 @@
       apt: name=docker state=latest
 
 ##Docker compose 
-    - name: create dir for compose
-      command: mkdir -p {{bin_path}}/docker-compose
-      become_user: root
-
-    - name: download docker-compose
-      shell: wget "https://github.com/docker/compose/releases/download/1.15.0/docker-compose-Linux-x86_64"
-      become_user: root
-
-##Move compose to bin
-    - name: change docker compose path
-      command: mv {{download_compose_directory}} {{bin_path}}/docker-compose
-      become_user: root
-
-    - name: change privileges  of compose   
-      command: chmod 755 -R "{{download_compose_directory}}"
-      become_user: root 
-
-    - name: change docker compose path
-      command: mv {{download_compose_directory}} {{bin_path}}/docker-compose
-      become_user: root
-   
-    - copy:
-        src: "{{sonar_compose_file}}"
-        dest: "{{home_server_tools}}/{{sonar_compose_file}}"
-        mode: 0644
-      become_user: root  
-
-    - name: verify compose installation
-      command: docker-compose --v
+    - name: install compose
+      apt: name=docker-compose state=latest
 
 ##Sonarqube
     - name: Sonarcube (docker virtual environment)
