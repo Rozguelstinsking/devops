@@ -48,6 +48,8 @@
     - name: ensure that postgresql is started
       service: name=postgresql state=started
 
+    - name: create table 
+
 ##Java ready     
     - name: install open-jdk 8
       command: apt-get install openjdk-8-jre --assume-yes
