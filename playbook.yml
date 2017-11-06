@@ -1,4 +1,7 @@
 ---
+- import_playbook: webservers.yml
+- import_playbook: databases.yml
+
 - hosts: all
   become: true
   vars:
@@ -35,14 +38,18 @@
     - name: update && upgrade
       command: apt-get update
       become_user: root
+
     - name: install upstart
       apt: name=upstart update_cache=yes state=latest
       sudo: yes
 
-##Install postgresql
-    - name: install postgresql
-      command: apt-get install postgresql postgresql-contrib --assume-yes
-      sudo: yes
+
+##Postgres
+    - name: ensure postgresql is at the latest version
+      apt: name=postgresql state=latest
+
+    - name: ensure that postgresql is started
+      service: name=postgresql state=started
 
 ##Java ready     
     - name: install open-jdk 8
@@ -56,6 +63,7 @@
         dest: "{{jenkins_name}}"
         mode: 0440
       sudo: yes
+    
     - name: Change jenkins archive privileges
       command: "chmod 775 {{jenkins_name}}"
       sudo: yes
@@ -66,18 +74,23 @@
         dest: "{{wildfly_name}}"
         mode: 0644
       sudo: yes
+    
     - name: Change wildfly archive privileges
       command: "chmod 775 {{wildfly_name}}"
       sudo: yes         
+    
     - name: extract wildfly
       command: tar zxvf {{wildfly_name}}
       sudo: yes
+    
     - name: copy wildfly to opt
       shell: "cp -R /home/ubuntu/wildfly-11.0.0.Final {{wildfly_folder}}"
       sudo: yes
+    
     - name: copy jenkins to deployments
       command: cp {{jenkins_name}} {{wildfly_deployments}}
       sudo: yes
+    
     - name: start wildfly and deploy jenkins
       shell: "{{wildfly_folder}}/bin/standalone.sh &"
       sudo: yes
@@ -88,20 +101,25 @@
         dest: "{{tomcat_name}}"
         mode: 0644
       sudo: yes
+    
     - name: Change tomcat archive privileges
       command: "chmod 775 {{tomcat_name}}"
       sudo: yes         
+    
     - name: extract tomcat
       command: tar zxvf {{tomcat_name}}
       sudo: yes
+    
     - name: copy tomcat to opt
       shell: "cp -R /home/ubuntu/apache-tomcat-8.5.23 {{tomcat_folder}}"
       sudo: yes
+    
     - copy:
         src: "{{tomcat_conf}}"
         dest: "{{tomcat_folder}}/conf"
         mode: 0644
       sudo: yes
+    
     - name: copy jenkins to tomcat deployments
       command: cp {{jenkins_name}} {{tomcat_deployments}}
       sudo: yes
@@ -116,6 +134,7 @@
         dest: /etc/systemd/system/jenkins.service
         mode: 0644
       sudo: yes
+    
     - name: start jenkins service
       shell: systemctl start jenkins.service
       sudo: yes 
@@ -124,6 +143,7 @@
     - name: install maven
       command: sudo apt-get install maven --assume-yes
       sudo: yes
+    
     - name: verify maven was installed
       command: mvn -version      
 
@@ -131,6 +151,7 @@
     - name: install apache2
       apt: name=apache2 update_cache=yes state=latest
       sudo: yes 
+    
     - name: ensure apache is running (and enable it at boot)
       service: name=apache2 state=started enabled=yes
-    
+
