@@ -14,6 +14,8 @@ This README would normally document whatever steps are necessary to get your app
 You must to have a remote server image to do connection with ssh service and downloades sshkeyfile. 
 In this case is devEnv.pem defined into hosts file
 
+Remote repo firt needs to be updated, upgrated and installed python.
+
 * 1.-Install ansible
 * 2.-Download code from repo
 * 3.-Define host ip, user, and ssh credentials server(keyfile), all this into hosts file defined on root repo path
