@@ -104,6 +104,9 @@
         dest: "/home/ubuntu"
         mode: 0644
 
+    - name: change privileges of compose
+      command: chmod 755 /home/ubuntu/docker-compose.yml
+
     - name: Sonarcube (docker virtual environment)
       command: docker-compose up -d
 
