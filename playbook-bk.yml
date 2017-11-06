@@ -1,0 +1,99 @@
+---
+- hosts: all
+  become: true
+  vars:
+     download_url: http://download.oracle.com/otn-pub/java/jdk/8u151-b12/e758a0de34e24606bca991d704f6dcbf/jdk-8u151-linux-x64.tar.gz
+     download_url_jenkins: http://mirrors.jenkins.io/war/latest/jenkins.war
+     download_url_maven: http://www-eu.apache.org/dist/maven/maven-3/3.5.0/binaries/apache-maven-3.5.0-bin.tar.gz
+     download_folder: /opt
+     tomcat_folder: "{{download_folder}}/apache-tomcat-8.5.23"
+     tomcat: "apache-tomcat-8.5.23.tar.gz"
+     sonarcube: "sonarqube-6.6.zip"
+     java_name: "{{download_folder}}/jdk1.8.0_151"
+     jenkins_name: "{{download_folder}}/jenkins.war"
+     sonarcube_name: "{{download_folder}}/{{sonarcube}}"
+     tomcat_name: "{{download_folder}}/{{tomcat}}"
+     maven: apache-maven-3.5.0-bin.tar.gz
+     maven_name: "{{download_folder}}/apache-maven-3.5.0"
+     maven_archive: "{{download_folder}}/apache-maven-3.5.0-bin.tar.gz"
+     java_archive: "{{download_folder}}/jdk-8u151-linux-x64.tar.gz"
+     jenkins_archive: "{{download_folder}}/{{download_url_jenkins}}"
+     maven_archive: "{{download_folder}}/{{download_url_maven}}"
+     java_package_name: jdk-8u151-linux-x64.tar
+     tomcat_deployments: "/opt/apache-tomcat-9.0.1/webapps"
+     jenkins_service: "/home/lpena/Documents/DevOps/vagrant-test/jenkins.service"
+     tomcat_service: "/home/lpena/Documents/DevOps/vagrant-test/tomcat.service"
+     tomcat_conf: "/home/lpena/Documents/DevOps/vagrant-test/server.xml"
+     path: /usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/home/ubuntu/.local/bin:/home/ubuntu/bin
+  tasks:
+##Update system  
+    - name: update && upgrade
+      command: apt-get update
+      sudo: yes
+    - name: install upstart
+      apt: name=upstart update_cache=yes state=latest
+      sudo: yes
+##Java ready     
+    - name: install open-jdk 8
+      command: apt-get install openjdk-8-jre --assume-yes
+      sudo: yes      
+##Copy tomcat      
+    - copy:
+        src: /home/lpena/Documents/Tools/{{tomcat}}
+        dest: "{{tomcat_name}}"
+        mode: 0644
+      sudo: yes
+    - name: Change tomcat archive privileges
+      command: "chmod 775 {{tomcat_name}}"
+      sudo: yes         
+    - name: extract tomcat
+      command: tar zxvf {{tomcat_name}}
+      sudo: yes
+    - name: copy tomcat to opt
+      shell: "cp -R /home/ubuntu/apache-tomcat-8.5.23 {{tomcat_folder}}"
+      sudo: yes
+    - copy:
+        src: "{{tomcat_conf}}"
+        dest: "{{tomcat_folder}}/bin/conf"
+        mode: 0644
+      sudo: yes
+##Jenkins service 
+    - name: Download Jenkins
+      command: wget --no-clobber --no-check-certificate {{download_url_jenkins}}
+      sudo: yes
+    - name: move jenkins to opt
+      shell: mv --force /home/ubuntu/jenkins.war {{jenkins_name}}
+      sudo: yes
+    - name: Change jenkins archive privileges
+      command: "chmod 775 {{jenkins_name}}"
+      sudo: yes     
+    - copy:
+        src: "{{jenkins_service}}"
+        dest: /etc/systemd/system/jenkins.service
+        mode: 0644
+      sudo: yes
+    - name: start jenkins service
+      shell: systemctl start jenkins.service
+      sudo: yes 
+##Tomcat service        
+    - copy:
+        src: "{{tomcat_service}}"
+        dest: /etc/systemd/system/tomcat.service
+        mode: 0644
+      sudo: yes
+    - name: start tomcat service
+      shell: systemctl start tomcat.service
+      sudo: yes
+##Maven ready
+    - name: install maven
+      command: sudo apt-get install maven --assume-yes
+      sudo: yes
+    - name: verify maven was installed
+      command: mvn -version      
+##Apache2 ready   
+    - name: install apache2
+      apt: name=apache2 update_cache=yes state=latest
+      sudo: yes 
+    - name: ensure apache is running (and enable it at boot)
+      service: name=apache2 state=started enabled=yes
+    

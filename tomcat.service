@@ -1,0 +1,9 @@
+[Unit]
+Description=Tomcat Daemon
+
+[Service]
+ExecStart=/home/ubuntu/apache-tomcat-8.5.23/bin/catalina.sh run
+User=tomcat
+
+[Install]
+WantedBy=multi-user.targetTomcat
