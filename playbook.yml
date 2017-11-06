@@ -1,7 +1,4 @@
 ---
-- import_playbook: webservers.yml
-- import_playbook: databases.yml
-
 - hosts: all
   become: true
   vars:
