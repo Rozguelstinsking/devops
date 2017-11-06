@@ -94,8 +94,12 @@
     - name: install compose
       apt: name=docker-compose state=latest
 
+    - name: ensure docker-compose installation
+      command: docker-compose -v
+
 ##Sonarqube
     - name: Sonarcube (docker virtual environment)
+      command: cd /opt
       command: docker-compose up
 
 ##Java ready     
