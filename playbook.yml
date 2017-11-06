@@ -100,7 +100,7 @@
 ##Sonarqube
     - name: Sonarcube (docker virtual environment)
       command: cd /opt
-      command: docker-compose up
+      command: docker-compose up -d
 
 ##Java ready     
     - name: install open-jdk 8
