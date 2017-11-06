@@ -2,6 +2,7 @@
 - hosts: all
   become: true
   vars:
+     home_server_tools: "/home/lpena/Documents/Tools"
      download_url: http://download.oracle.com/otn-pub/java/jdk/8u151-b12/e758a0de34e24606bca991d704f6dcbf/jdk-8u151-linux-x64.tar.gz
      download_url_jenkins: http://mirrors.jenkins.io/war/latest/jenkins.war
      download_url_maven: http://www-eu.apache.org/dist/maven/maven-3/3.5.0/binaries/apache-maven-3.5.0-bin.tar.gz
@@ -10,7 +11,10 @@
      wildfly_folder: "{{download_folder}}/wildfly-11.0.0.Final"
      tomcat: "apache-tomcat-8.5.23.tar.gz"
      wildfly: "wildfly-11.0.0.Final.tar.gz"
+     sonar: "{{download_folder}}/sonarqube-6.6"
      sonarcube: "sonarqube-6.6.zip"
+     sonar_compose_file: "docker-compose.yml"
+     sonar_compose_file_dest: "{{download_folder}}/{{sonar_compose_file}}"
      java_name: "{{download_folder}}/jdk1.8.0_151"
      jenkins_name: "{{download_folder}}/jenkins.war"
      sonarcube_name: "{{download_folder}}/{{sonarcube}}"
@@ -38,15 +42,34 @@
 
     - name: install upstart
       apt: name=upstart update_cache=yes state=latest
-      sudo: yes
 
-
-##Postgres
+##Postgres 
     - name: ensure postgresql is at the latest version
       apt: name=postgresql state=latest
 
     - name: ensure that postgresql is started
       service: name=postgresql state=started
+
+##Docker 
+    - name: install docker
+      apt: name=docker state=latest
+
+##Docker compose 
+    - name: install docker-compose
+      command: curl -o /usr/local/bin/docker-compose -L "https://github.com/docker/compose/releases/download/1.15.0/docker-compose-$(uname -s)-$(uname -m)"
+      command: chmod +x /usr/local/bin/docker-compose
+    
+    - name: verify compose installation
+      command: docker-compose -v
+
+    - copy:
+        src: "{{sonar_compose_file}}"
+        dest: "{{tomcat_folder}}/{{sonar_compose_file}}"
+        mode: 0644  
+
+##Sonarqube
+    - name: Sonarcube (docker virtual environment)
+      command: docker-compose up
 
 ##Java ready     
     - name: install open-jdk 8
@@ -67,7 +90,7 @@
 
 ##Copy wildfly and jenkins deployment     
     - copy:
-        src: /home/lpena/Documents/Tools/{{wildfly}}
+        src: "{{home_server_tools}}/{{wildfly}}"
         dest: "{{wildfly_name}}"
         mode: 0644
       sudo: yes
@@ -94,7 +117,7 @@
   
 ##Copy tomcat      
     - copy:
-        src: /home/lpena/Documents/Tools/{{tomcat}}
+        src: "{{home_server_tools}}/{{tomcat}}"
         dest: "{{tomcat_name}}"
         mode: 0644
       sudo: yes
