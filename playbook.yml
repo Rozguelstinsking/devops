@@ -98,8 +98,13 @@
       command: docker-compose -v
 
 ##Sonarqube
+
+    - copy:
+        src: "{{home_server_tools}}/docker-compose.yml"
+        dest: "/home/ubuntu"
+        mode: 0644
+
     - name: Sonarcube (docker virtual environment)
-      command: cd /opt
       command: docker-compose up -d
 
 ##Java ready     
