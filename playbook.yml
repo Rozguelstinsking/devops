@@ -3,6 +3,10 @@
   become: true
   vars:
      home_server_tools: "/home/lpena/Documents/Tools"
+     bin_path: "/usr/local/bin"
+     distro_kernel: $(uname -s)
+     architecture_server: $(uname -m)
+     download_compose_directory: "/home/ubuntu/docker-compose-Linux-x86_64"
      download_url: http://download.oracle.com/otn-pub/java/jdk/8u151-b12/e758a0de34e24606bca991d704f6dcbf/jdk-8u151-linux-x64.tar.gz
      download_url_jenkins: http://mirrors.jenkins.io/war/latest/jenkins.war
      download_url_maven: http://www-eu.apache.org/dist/maven/maven-3/3.5.0/binaries/apache-maven-3.5.0-bin.tar.gz
@@ -36,14 +40,46 @@
   tasks:
 
 ##Update system ready 
-    - name: update && upgrade
+    - name: update
       command: apt-get update
+      become_user: root
+
+    - name: upgrade
+      command: apt-get -y upgrade
+      become_user: root
+
+    - name: install pip
+      command: sudo apt-get install -y python3-pip
+      become_user: root
+
+    - name: create sonar paths /opt/sonarqube
+      command: "mkdir -p /opt/sonarqube"
+      become_user: root
+
+    - name: create sonar paths /opt/sonarqube/conf
+      command: "mkdir -p /opt/sonarqube/conf"
+      become_user: root
+
+    - name: create sonar paths /opt/sonarqube/data
+      command: "mkdir -p /opt/sonarqube/data"
+      become_user: root
+    
+    - name: create /opt/sonarqube/extensions
+      command: "mkdir -p /opt/sonarqube/extensions"
+      become_user: root
+
+    - name: create /opt/sonarqube/lib
+      command: "mkdir -p /opt/sonarqube/lib"
+      become_user: root
+
+    - name: create /opt/sonarqube/lib/bundled-plugins
+      command: "mkdir -p /opt/sonarqube/lib/bundled-plugins"
       become_user: root
 
     - name: install upstart
       apt: name=upstart update_cache=yes state=latest
 
-##Postgres 
+##Postgres ready
     - name: ensure postgresql is at the latest version
       apt: name=postgresql state=latest
 
@@ -55,17 +91,35 @@
       apt: name=docker state=latest
 
 ##Docker compose 
-    - name: install docker-compose
-      command: curl -o /usr/local/bin/docker-compose -L "https://github.com/docker/compose/releases/download/1.15.0/docker-compose-$(uname -s)-$(uname -m)"
-      command: chmod +x /usr/local/bin/docker-compose
-    
-    - name: verify compose installation
-      command: docker-compose -v
+    - name: create dir for compose
+      command: mkdir -p {{bin_path}}/docker-compose
+      become_user: root
 
+    - name: download docker-compose
+      shell: wget "https://github.com/docker/compose/releases/download/1.15.0/docker-compose-Linux-x86_64"
+      become_user: root
+
+##Move compose to bin
+    - name: change docker compose path
+      command: mv {{download_compose_directory}} {{bin_path}}/docker-compose
+      become_user: root
+
+    - name: change privileges  of compose   
+      command: chmod 755 -R "{{download_compose_directory}}"
+      become_user: root 
+
+    - name: change docker compose path
+      command: mv {{download_compose_directory}} {{bin_path}}/docker-compose
+      become_user: root
+   
     - copy:
         src: "{{sonar_compose_file}}"
-        dest: "{{tomcat_folder}}/{{sonar_compose_file}}"
-        mode: 0644  
+        dest: "{{home_server_tools}}/{{sonar_compose_file}}"
+        mode: 0644
+      become_user: root  
+
+    - name: verify compose installation
+      command: docker-compose --v
 
 ##Sonarqube
     - name: Sonarcube (docker virtual environment)
@@ -76,7 +130,7 @@
       command: apt-get install openjdk-8-jre --assume-yes
       sudo: yes
 
-##Jenkins download 
+##Jenkins download ready
     - name: Download Jenkins
       get_url:
         url:  "{{download_url_jenkins}}"
@@ -88,7 +142,7 @@
       command: "chmod 775 {{jenkins_name}}"
       sudo: yes
 
-##Copy wildfly and jenkins deployment     
+##Copy wildfly and jenkins deployment ready    
     - copy:
         src: "{{home_server_tools}}/{{wildfly}}"
         dest: "{{wildfly_name}}"
