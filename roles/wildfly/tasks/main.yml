@@ -1,0 +1,25 @@
+    - copy:
+        src: "{{home_server_tools}}/{{wildfly}}"
+        dest: "{{wildfly_name}}"
+        mode: 0644
+      sudo: yes
+    
+    - name: Change wildfly archive privileges
+      command: "chmod 775 {{wildfly_name}}"
+      sudo: yes         
+    
+    - name: extract wildfly
+      command: tar zxvf {{wildfly_name}}
+      sudo: yes
+    
+    - name: copy wildfly to opt
+      shell: "cp -R /home/ubuntu/wildfly-11.0.0.Final {{wildfly_folder}}"
+      sudo: yes
+    
+    - name: copy jenkins to deployments
+      command: cp {{jenkins_name}} {{wildfly_deployments}}
+      sudo: yes
+    
+    - name: start wildfly and deploy jenkins
+      shell: "{{wildfly_folder}}/bin/standalone.sh &"
+      sudo: yes

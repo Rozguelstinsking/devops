@@ -1,0 +1,6 @@
+    - name: ensure postgresql is at the latest version
+      apt: name=postgresql state=latest
+
+    - name: ensure that postgresql is started
+      service: name=postgresql state=started
+

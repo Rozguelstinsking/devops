@@ -1,6 +1,14 @@
 ---
 - hosts: all
-  become: true
+  sudo: True
+
+  roles:
+    - systema
+    - postgres
+    - paths
+    - wildfly
+    - jenkins
+    
   vars:
      home_server_tools: "/home/lpena/Documents/Tools"
      bin_path: "/usr/local/bin"
@@ -40,51 +48,8 @@
   tasks:
 
 ##Update system ready 
-    - name: update
-      command: apt-get update
-      become_user: root
-
-    - name: upgrade
-      command: apt-get -y upgrade
-      become_user: root
-
-    - name: install pip
-      command: sudo apt-get install -y python3-pip
-      become_user: root
-
-    - name: create sonar paths /opt/sonarqube
-      command: "mkdir -p /opt/sonarqube"
-      become_user: root
-
-    - name: create sonar paths /opt/sonarqube/conf
-      command: "mkdir -p /opt/sonarqube/conf"
-      become_user: root
-
-    - name: create sonar paths /opt/sonarqube/data
-      command: "mkdir -p /opt/sonarqube/data"
-      become_user: root
-    
-    - name: create /opt/sonarqube/extensions
-      command: "mkdir -p /opt/sonarqube/extensions"
-      become_user: root
-
-    - name: create /opt/sonarqube/lib
-      command: "mkdir -p /opt/sonarqube/lib"
-      become_user: root
-
-    - name: create /opt/sonarqube/lib/bundled-plugins
-      command: "mkdir -p /opt/sonarqube/lib/bundled-plugins"
-      become_user: root
-
-    - name: install upstart
-      apt: name=upstart update_cache=yes state=latest
 
 ##Postgres ready
-    - name: ensure postgresql is at the latest version
-      apt: name=postgresql state=latest
-
-    - name: ensure that postgresql is started
-      service: name=postgresql state=started
 
 ##Docker 
     - name: install docker
@@ -116,76 +81,10 @@
       sudo: yes
 
 ##Jenkins download ready
-    - name: Download Jenkins
-      get_url:
-        url:  "{{download_url_jenkins}}"
-        dest: "{{jenkins_name}}"
-        mode: 0440
-      sudo: yes
-    
-    - name: Change jenkins archive privileges
-      command: "chmod 775 {{jenkins_name}}"
-      sudo: yes
 
 ##Copy wildfly and jenkins deployment ready    
-    - copy:
-        src: "{{home_server_tools}}/{{wildfly}}"
-        dest: "{{wildfly_name}}"
-        mode: 0644
-      sudo: yes
     
-    - name: Change wildfly archive privileges
-      command: "chmod 775 {{wildfly_name}}"
-      sudo: yes         
-    
-    - name: extract wildfly
-      command: tar zxvf {{wildfly_name}}
-      sudo: yes
-    
-    - name: copy wildfly to opt
-      shell: "cp -R /home/ubuntu/wildfly-11.0.0.Final {{wildfly_folder}}"
-      sudo: yes
-    
-    - name: copy jenkins to deployments
-      command: cp {{jenkins_name}} {{wildfly_deployments}}
-      sudo: yes
-    
-    - name: start wildfly and deploy jenkins
-      shell: "{{wildfly_folder}}/bin/standalone.sh &"
-      sudo: yes
-  
 ##Copy tomcat      
-    - copy:
-        src: "{{home_server_tools}}/{{tomcat}}"
-        dest: "{{tomcat_name}}"
-        mode: 0644
-      sudo: yes
-    
-    - name: Change tomcat archive privileges
-      command: "chmod 775 {{tomcat_name}}"
-      sudo: yes         
-    
-    - name: extract tomcat
-      command: tar zxvf {{tomcat_name}}
-      sudo: yes
-    
-    - name: copy tomcat to opt
-      shell: "cp -R /home/ubuntu/apache-tomcat-8.5.23 {{tomcat_folder}}"
-      sudo: yes
-    
-    - copy:
-        src: "{{tomcat_conf}}"
-        dest: "{{tomcat_folder}}/conf"
-        mode: 0644
-      sudo: yes
-    
-    - name: copy jenkins to tomcat deployments
-      command: cp {{jenkins_name}} {{tomcat_deployments}}
-      sudo: yes
-    
-    - name: start tomcat
-      shell: "nohup {{tomcat_folder}}/bin/catalina.sh start"
-      sudo: yes 
 
 ##Jenkins service 
     - copy:

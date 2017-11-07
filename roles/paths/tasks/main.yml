@@ -1,0 +1,24 @@
+    - name: create sonar paths /opt/sonarqube
+      command: "mkdir -p /opt/sonarqube"
+      become_user: root
+
+    - name: create sonar paths /opt/sonarqube/conf
+      command: "mkdir -p /opt/sonarqube/conf"
+      become_user: root
+
+    - name: create sonar paths /opt/sonarqube/data
+      command: "mkdir -p /opt/sonarqube/data"
+      become_user: root
+    
+    - name: create /opt/sonarqube/extensions
+      command: "mkdir -p /opt/sonarqube/extensions"
+      become_user: root
+
+    - name: create /opt/sonarqube/lib
+      command: "mkdir -p /opt/sonarqube/lib"
+      become_user: root
+
+    - name: create /opt/sonarqube/lib/bundled-plugins
+      command: "mkdir -p /opt/sonarqube/lib/bundled-plugins"
+      become_user: root
+

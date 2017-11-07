@@ -1,0 +1,14 @@
+    - name: update
+      command: apt-get update
+      become_user: root
+
+    - name: upgrade
+      command: apt-get -y upgrade
+      become_user: root
+
+    - name: install pip
+      command: sudo apt-get install -y python3-pip
+      become_user: root
+
+    - name: install upstart
+      apt: name=upstart update_cache=yes state=latest

@@ -1,0 +1,11 @@
+    - name: Download Jenkins
+      get_url:
+        url:  "{{download_url_jenkins}}"
+        dest: "{{jenkins_name}}"
+        mode: 0440
+      sudo: yes
+    
+    - name: Change jenkins archive privileges
+      command: "chmod 775 {{jenkins_name}}"
+      sudo: yes
+

@@ -1,0 +1,32 @@
+    - copy:
+        src: "{{home_server_tools}}/{{tomcat}}"
+        dest: "{{tomcat_name}}"
+        mode: 0644
+      sudo: yes
+    
+    - name: Change tomcat archive privileges
+      command: "chmod 775 {{tomcat_name}}"
+      sudo: yes         
+    
+    - name: extract tomcat
+      command: tar zxvf {{tomcat_name}}
+      sudo: yes
+    
+    - name: copy tomcat to opt
+      shell: "cp -R /home/ubuntu/apache-tomcat-8.5.23 {{tomcat_folder}}"
+      sudo: yes
+    
+    - copy:
+        src: "{{tomcat_conf}}"
+        dest: "{{tomcat_folder}}/conf"
+        mode: 0644
+      sudo: yes
+    
+    - name: copy jenkins to tomcat deployments
+      command: cp {{jenkins_name}} {{tomcat_deployments}}
+      sudo: yes
+    
+    - name: start tomcat
+      shell: "nohup {{tomcat_folder}}/bin/catalina.sh start"
+      sudo: yes 
+
